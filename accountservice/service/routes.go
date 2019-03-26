@@ -1,0 +1,42 @@
+package service
+
+import "net/http"
+
+// Defines a single route, e.g. a human readable name, HTTP method and the
+// pattern the function that will execute when the route is called.
+type Route struct {
+	Name        string
+	Method      string
+	Pattern     string
+	HandlerFunc http.HandlerFunc
+}
+
+// Defines the type Routes which is just an array (slice) of Route structs.
+type Routes []Route
+
+var getAccountRoute = Route{
+	"GetAccount",
+	"GET",
+	"/accounts/{accountId}",
+	GetAccount,
+}
+
+var healthCheckRoute = Route{
+	"HealthCheck",
+	"GET",
+	"/health",
+	HealthCheck,
+}
+
+var testabilityRoute = Route{
+	"Testability",
+	"GET",
+	"/testability/healthy/{state}",
+	SetHealthyState,
+}
+
+var routes = Routes{
+	getAccountRoute,
+	healthCheckRoute,
+	testabilityRoute,
+}
