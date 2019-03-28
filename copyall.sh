@@ -12,4 +12,4 @@ cp healthchecker/healthchecker-linux-amd64 accountservice/
 docker build -t bstenm/accountservice accountservice/
 
 docker service rm accountservice
-docker service create --name=accountservice --replicas=1 --network=my_new_network -p=6767:6767 bstenm/accountservice
+docker service create --name=accountservice --replicas=1 --network=my_network -p=6767:6767 bstenm/accountservice
