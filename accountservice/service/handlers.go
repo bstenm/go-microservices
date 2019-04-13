@@ -3,22 +3,39 @@ package service
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"log"
 	"net"
 	"net/http"
 	"strconv"
 
 	"github.com/callistaenterprise/goblog/accountservice/dbclient"
+	"github.com/callistaenterprise/goblog/accountservice/model"
 	"github.com/gorilla/mux"
 )
 
 var DBClient dbclient.IBoltClient
 
+var client = &http.Client{}
+
+func init() {
+	var transport http.RoundTripper = &http.Transport{
+		DisableKeepAlives: true,
+	}
+
+	client.Transport = transport
+}
+
 func GetAccount(w http.ResponseWriter, r *http.Request) {
 	var accountId = mux.Vars(r)["accountId"]
 
 	account, err := DBClient.QueryAccount(accountId)
-
 	account.ServedBy = getIP()
+
+	quote, err2 := getQuote()
+	if err2 == nil {
+		account.Quote = quote
+	}
 
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
@@ -33,7 +50,23 @@ func GetAccount(w http.ResponseWriter, r *http.Request) {
 	w.Write(data)
 }
 
-// ADD THIS FUNC
+func getQuote() (model.Quote, error) {
+	req, _ := http.NewRequest("GET", "http://192.168.8.100:6768/quote", nil)
+	resp, err := client.Do(req)
+
+	if err == nil && resp.StatusCode == 200 {
+		quote := model.Quote{}
+		bytes, _ := ioutil.ReadAll(resp.Body)
+
+		json.Unmarshal(bytes, &quote)
+		log.Println("Resp:", quote)
+
+		return quote, nil
+	}
+
+	return model.Quote{}, fmt.Errorf("Some error")
+}
+
 func getIP() string {
 	addrs, err := net.InterfaceAddrs()
 	if err != nil {
